@@ -55,7 +55,7 @@ In my script, I also annotated other stuff other than alpha sattelite (MobileEle
 ```
 vcftools --vcf Filename.annotated.filtered.vcf --remove-filtered-all --recode --recode-INFO-all --stdout > Filename.annotated.filtered.passed.vcf
 ```
-* Since we didn't use a third party tool to recisely map the breakpoint using "split read", we need to use "SVGenotyperWithoutSplitReads.q" in this step. 
+* Since we didn't use a third party tool to precisely map the breakpoint using "split read", we need to use "SVGenotyperWithoutSplitReads.q" in this step. 
 * In this step, there is a bug associating with the name of the intermediate ".dat" files. So after the job was terminated due to this error, you should manually create soft links to these ".dat" files in the running directory.
 Here is an example of the code to implement that:
 ```
