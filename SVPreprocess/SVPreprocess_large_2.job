@@ -1,0 +1,16 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N SVPreprocess
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/3-10-18SVPreprocess_large.$JOB_ID.$TASK_ID.out 
+#$ -j y  
+#$ -m bea 
+#$ -l h_data=20G,h_rt=48:00:00,highp
+#$ -t 1-5:1
+
+
+index=`expr $SGE_TASK_ID - 1 `
+bash preprocess_HZ_large.sh batch2.${index}.list
+
+

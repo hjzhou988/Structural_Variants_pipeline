@@ -1,0 +1,93 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N SVGeno_100k
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/6-11-18SVGenotyper_100k_large.$JOB_ID.out 
+#$ -j y 
+#$ -m bea 
+#$ -l h_data=20G,h_rt=24:00:00,highp
+
+
+# Need to specifiy inputfile (the annotated and filtered SVDiscovery file). Need to specify runDir, but assume that runDir will be put in the SVDiscovery folder. Also need to specify your SCRIPT_DIR,
+# and your SVPreprocessing meta data folder MD_DIR. Also assume that the output genotype vcf will be put in the run directory. 
+inputfile=\
+'/u/flashscratch/h/hjzhou/redo_discovery_out/deletions100k.svtoolkit2017April.mask/deletions100k.svtoolkit2017April.mask.svdiscovery.dels.100k.annotated.filtered.passed.vcf'
+basicpath=${inputfile%/*}  # remove suffix, the path of SVDiscovery
+basicname=`echo $inputfile | sed -e 's/\/.*\///g' | sed 's/.vcf//g'`
+outputfilename=${basicname}.genotyped.vcf
+
+# runDir is where all the output files go
+runDir=${basicpath}/del100k_gt_redo
+
+# script directory
+SCRIPT_DIR=/u/flashscratch/h/hjzhou
+
+# MD_DIR is the location of the preprocessed metadata files
+MD_DIR="/u/flashscratch/h/hjzhou/bipolar_sv_large"
+# SV_DIR is the installation directory for SVToolkit - it must be an exported environment variable.
+# SV_TMPDIR is a directory for writing temp files, which may be large if you have a large data set.
+export SV_DIR="/u/home/h/hjzhou/dd/svtoolkit"
+SV_TMPDIR=${SCRIPT_DIR}/svgenotyper_tmp
+
+# load needed hoffman2 modules
+. /u/local/Modules/default/init/modules.sh
+module load java
+module load R
+module load samtools
+
+# These executables must be on your path.
+which java > /dev/null || exit 1
+which Rscript > /dev/null || exit 1
+which samtools > /dev/null || exit 1
+
+# For SVAltAlign, you must use the version of bwa compatible with Genome STRiP.
+export PATH=${SV_DIR}/bwa:${PATH}
+export LD_LIBRARY_PATH=${SV_DIR}/bwa:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/u/systems/UGE8.0.1vm/lib/lx-amd64/:$LD_LIBRARY_PATH
+
+# May need to raise to 8g and change the jobNative parameter below
+
+mx="-Xmx5g"
+classpath="${SV_DIR}/lib/SVToolkit.jar:${SV_DIR}/lib/gatk/GenomeAnalysisTK.jar:${SV_DIR}/lib/gatk/Queue.jar"
+
+# Create needed runDir
+mkdir -p ${runDir} || exit 1
+mkdir -p ${runDir}/logs || exit 1
+mkdir -p $SV_TMPDIR
+
+# Display version information.
+java ${mx} -cp ${classpath} -jar -Djava.io.tmpdir="${SV_TMPDIR}" ${SV_DIR}/lib/SVToolkit.jar
+
+java ${mx} -cp ${classpath} \
+     org.broadinstitute.gatk.queue.QCommandLine \
+     -S ${SV_DIR}/qscript/SVGenotyperWithoutSplitReads.q \
+     -S ${SV_DIR}/qscript/SVQScript.q \
+     -cp ${classpath} \
+     -gatk ${SV_DIR}/lib/gatk/GenomeAnalysisTK.jar \
+     -configFile ${SV_DIR}/conf/genstrip_parameters.txt \
+     --disableJobReport \
+     -R /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.fasta \
+     -I /u/home/h/hjzhou/batch_redo449.list \
+     -genomeMaskFile /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.svmask.fasta \
+     -tempDir $SV_TMPDIR \
+     -md ${MD_DIR}/batch1.0/metadata \
+     -md ${MD_DIR}/batch1.1/metadata \
+     -md ${MD_DIR}/batch1.2/metadata \
+     -md ${MD_DIR}/batch1.3/metadata \
+     -md ${MD_DIR}/batch1.4/metadata \
+     -md ${MD_DIR}/batch2.0/metadata \
+     -md ${MD_DIR}/batch2.1/metadata \
+     -md ${MD_DIR}/batch2.2/metadata \
+     -md ${MD_DIR}/batch2.3/metadata \
+     -md ${MD_DIR}/batch2.4/metadata \
+     -runDirectory $runDir \
+     -jobLogDir $runDir/logs \
+     -jobRunner "Drmaa" \
+     -gatkJobRunner "Drmaa" \
+     -jobNative "-V -l h_data=8G,h_rt=300:00:00,highp" \
+     -parallelRecords 100 \
+     -vcf $inputfile \
+     -O $runDir/$outputfilename \
+     -run \
+     || exit 1

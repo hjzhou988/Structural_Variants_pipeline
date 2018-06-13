@@ -1,0 +1,64 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N Anno_filter
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/6-10-18Anno_filter.$JOB_ID.out 
+#$ -j y 
+#$ -m bea 
+#$ -l h_data=10G,h_rt=24:00:00
+
+
+#Annotation:
+#You only need to specify the input vcf file. The default location of output filtered vcf file is the same directory. 
+inputfile=\
+'/u/flashscratch/h/hjzhou/redo_discovery_out/deletions100k.svtoolkit2017April.mask/deletions100k.svtoolkit2017April.mask.svdiscovery.dels.100k.vcf'
+basicpath=${inputfile%/*}  # remove suffix, will be the output path
+basicname=`echo $inputfile | sed -e 's/\/.*\///g' | sed 's/.vcf//g'`
+outputfilename=${basicname}.annotated.vcf
+
+. /u/local/Modules/default/init/modules.sh
+module load java
+module load R
+module load samtools
+
+export SV_DIR="/u/home/h/hjzhou/svtoolkit"
+
+classpath="${SV_DIR}/lib/SVToolkit.jar:${SV_DIR}/lib/gatk/GenomeAnalysisTK.jar"
+
+java -Xmx4g -cp ${classpath} \
+     org.broadinstitute.sv.main.SVAnnotator \
+     -A GCContent \
+     -A AlleleFrequency \
+     -A VariantsPerSample \
+     -A NonVariant \
+     -A Redundancy \
+     -A MobileElements \
+     -A CopyNumberClass \
+     -repeatTrackFile /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/ucsc_repeats_hg19.dat \
+     -R /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.fasta \
+     -irsUseGenotypes true \
+     -comparisonFile $inputfile \
+     -duplicateOverlapThreshold 0.5 \
+     -writeReport true \
+     -writeSummary true \
+     -vcf $inputfile \
+     -reportDirectory $basicpath \
+     -O $basicpath/$outputfilename
+
+#Filtering:
+inputfile=$basicpath/$outputfilename
+outputfilename=${basicname}.annotated.filtered.vcf
+
+export SV_DIR="/u/home/h/hjzhou/svtoolkit"
+
+. /u/local/Modules/default/init/modules.sh
+module load java
+
+java -Xmx4g -jar ${SV_DIR}/lib/gatk/GenomeAnalysisTK.jar \
+  -T VariantFiltration \
+  -V $inputfile \
+  -o $basicpath/$outputfilename \
+  -R /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.fasta \
+  -filterName ALPHASAT -filter "GSALPHASATFRACTION > 0.90"
+
