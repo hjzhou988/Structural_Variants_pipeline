@@ -1,0 +1,16 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N LUMPY_sort
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/4-24-18Lumpy_sort.$JOB_ID.out
+#$ -j y
+#$ -m bea
+#$ -l h_data=30G,h_rt=24:00:00
+. /u/local/Modules/default/init/modules.sh
+module load python/2.7
+cd $SCRATCH/bipolar_lumpy/
+
+python ~/lumpy-sv/scripts/l_sort.py `ls *.lumpy.vcf` > Lumpy_master_sorted_1.vcf
+
+/u/project/zarlab/jhsul/bin/bam_to_fastq/bam_to_fastq_3
