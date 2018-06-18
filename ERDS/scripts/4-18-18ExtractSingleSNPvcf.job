@@ -1,0 +1,29 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N ExtractSNPVCF
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/4-18-18ExtractSNPVCF.$JOB_ID.$TASK_ID.out
+#$ -j y
+#$ -m a
+#$ -l h_data=1G,h_rt=24:00:00
+#$ -t 1-229:1 
+
+
+
+# load vcf tools
+. /u/local/Modules/default/init/modules.sh
+module load vcftools
+
+
+# Get one sample one at a time
+used_bamfile=`sed -n "${SGE_TASK_ID}p" /u/home/h/hjzhou/batch2.list`
+samplename=`echo $used_bamfile | sed -e 's/\/.*\///g' | sed 's/.dedup.realigned.recal.bam//g'`
+
+# use vcftools to extract the sites for this sample.  
+vcftools --indv $samplename --vcf /u/flashscratch/h/hjzhou/All.dedup.region_merged.realigned.recal.raw_snp.GVCFed.VQSR.vcf --non-ref-ac 1  --recode  --stdout | gzip -c > $SCRATCH/${samplename}_snp.vcf.gz
+
+
+
+# last the job for 3 minutes in case it failed and you get throttled.
+/u/project/zarlab/jhsul/bin/bam_to_fastq/bam_to_fastq_3
