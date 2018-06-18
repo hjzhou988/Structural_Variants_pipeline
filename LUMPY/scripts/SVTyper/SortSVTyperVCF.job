@@ -1,0 +1,19 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N Sort_VCF
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/6-15-18Sort_SVTyper_VCF.out
+#$ -j y
+#$ -m bae
+#$ -l h_data=1G,h_rt=24:00:00
+
+
+cd /u/flashscratch/h/hjzhou/bipolar_lumpy/
+
+. /u/local/Modules/default/init/modules.sh
+module load vcftools
+
+vcf-sort svtyper.combined.vcf > svtyper.combined.sorted.vcf
+bgzip svtyper.combined.sorted.vcf
+tabix -p vcf svtyper.combined.sorted.vcf.gz

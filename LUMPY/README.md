@@ -8,24 +8,47 @@ In scenario B, multiple samples (typically a trio) are used as inputs for one LU
 
 In the pipeline described here, the majory part is directly from [Colin Farrell's work](https://github.com/NuttyLogic/SV_Pipeline), with some modifications and annotations. Install LUMPY from its github page https://github.com/arq5x/lumpy-sv. 
 
-## Single sample SV calling by tradition LUMPY
-Example script is in "lumpy_variants_HZ.sh" and "lumpy_submission_shell_HZ.sh". 
-Do not use lumpyexpress, as it will not work with the downstream sorting and merging multiple VCF files.
+## Single sample SV calling by traditional LUMPY
+Traditional LUMPY example script is in "lumpy_variants_HZ.sh" and "lumpy_submission_shell_HZ.sh". 
+lumpyexpress can also be used, as long as "-P" flag is on (It generates probability curves, which is required by the l_merge.py, in the VCF file). (I have not tested lumpyexpress -P yet)
 
 ## Sort and merge single-sample VCFs
 Use the LUMPY provided l_sort.py and l_merge.py scripts to sort and merge all single-sample VCF together. 
-l_sort.py needs all single-sample VCFs as input. 
-l_merge.py needs the output from l_sort.py.
+l_sort.py needs all single-sample VCFs as input. Its output is a multi-sample VCF contains all the sites sorted. 
+l_merge.py needs the output from l_sort.py. It merges similar sites based on the boarder probabilities. 
 It consumes a lot of memory. The job submission script uses 33G memory for l_merge.py and a little less for l_sort.py.
 
-## Regions to exclude
-The LUMPY paper has its own regions to exclude, based on certain regions having abnormally high coverage (https://github.com/hall-lab/speedseq/blob/master/annotations/ceph18.b37.lumpy.exclude.2014-01-15.bed). 
-The LUMPY github also recommends the exclusion region published by Heng Li (https://doi.org/10.1093/bioinformatics/btu356)
-The exclusion regions can be used either in the LUMPY running step. Otherwise you can use "bedtools intersect" function to delete the sites that intersect with the exclusion regions. 
+## Remove BND calls
+LUMPY generates a lot of BND calls. For now, we ignore them and delete them from the multisample VCF. Colin's script of "bnd_remover.py" is used. 
+```
+python bnd_remover.py -i LUMPY.vcf -o LUMPY.bnd_rm.vcf -d path_to_LUMPYvcf/
+```
 
 ## Genotyping
+[SVTyper](https://github.com/hall-lab/svtyper) is used to genotype the LUMPY result. The BND removed multi-sample VCF from LUMPY is used as input. The SVTyper program genotypes one sample at a time. The output can be merged by the script "vcf_paste.py" from SVTyper github. It should then be sorted by vcf-sort, so that it is ready for Mendelian error detection (My current implementation cannot detect duplicated markers if the vcf is not sorted). 
+* Install SVTyper according to SVTyper github page. 
+* Run "sv_typer_submission_shell.HZ.sh" (bundled with svtyper_shell.HZ.sh) in the SVTyper folder (scripts based on Colin's work). This step generates single-sample genotype VCF for all samples. 
+* Merge all single-sample genotype VCF using "vcf_paste.py" (SVTyper_merge.job)
+* Sort the merged VCF using vcf-sort
+```
+. /u/local/Modules/default/init/modules.sh
+module load vcftools
+vcf-sort svtyper.combined.vcf > svtyper.combined.sorted.vcf
+```
+* Remove the sites that are ./. in all samples. "RemoveMissingGTsites.py"
 
 
+## Regions to exclude
+* The LUMPY paper has its own regions to exclude, based on certain regions having abnormally high coverage (https://github.com/hall-lab/speedseq/blob/master/annotations/ceph18.b37.lumpy.exclude.2014-01-15.bed). 
+* The LUMPY github also recommends the exclusion region published by Heng Li (https://doi.org/10.1093/bioinformatics/btu356)
+* The exclusion regions can be used either in the LUMPY running step. Otherwise you can use "bedtools intersect" function to delete the sites that intersect with the exclusion regions. 
+* I used the 100-mer mappability mask from GenomeSTRiP reference bundle to filter out the sites. "/u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.mask.101.fasta.bed"
+* VDJ recombination regions should also be excluded. "Homo_sapiens_assembly19.vdjregions.bed"
+```
+. /u/local/Modules/default/init/modules.sh
+module load bedtools
+bedtools interset -v -a Input.vcf -b ExcludeRegions.bed
+```
 
 [1] Layer, Ryan M., et al. "LUMPY: a probabilistic framework for structural variant discovery." Genome biology 15.6 (2014): R84.
 

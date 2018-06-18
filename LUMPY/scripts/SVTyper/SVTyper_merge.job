@@ -1,0 +1,19 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N SVTyper_merge
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/6-8-18.SVTyper_merge.$JOB_ID.out 
+#$ -j y  
+#$ -m bea 
+#$ -l h_data=1G,h_rt=24:00:00
+
+# load needed hoffman2 modules
+. /u/local/Modules/default/init/modules.sh
+module load python/2.7.13
+
+cd $SCRATCH/bipolar_lumpy/
+
+
+# svtyper.vcf.list is a text file of all SVTyper output VCFs. You can generate it by going to the directory where the VCFs locate and using command "ls *.svtyper.vcf.gz > svtyper.vcf.list"
+python ~/SV_Pipeline/vcf_paste.py -f svtyper.vcf.list > svtyper.combined.vcf
