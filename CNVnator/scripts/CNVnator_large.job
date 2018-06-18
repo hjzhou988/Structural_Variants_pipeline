@@ -1,0 +1,42 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N CNVnator
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/3-29-18CNVnator_large-1.$JOB_ID.$TASK_ID.out
+#$ -j y
+#$ -m a
+#$ -l h_data=16G,h_rt=24:00:00
+#$ -t 1-454:1 
+
+# requires ROOT
+. /u/local/Modules/default/init/modules.sh
+module load cern_root
+
+# specify the variables
+used_bamfile=`sed -n "${SGE_TASK_ID}p" /u/home/h/hjzhou/batch_all.list`
+binsize=500
+name=`echo $used_bamfile | sed -e 's/\/.*\///g' | sed 's/.dedup.realigned.recal.bam//g'`
+CNVnatorPrefix=/u/home/h/hjzhou/CNVnator_v0.3.3/src
+work_dir=$SCRATCH/CNVnator_large/$name
+rootfile=$work_dir/${name}.root
+hg19=/u/flashscratch/h/hjzhou/hg19
+
+# make directories
+mkdir -p $SCRATCH/CNVnator_large/
+mkdir -p $work_dir
+mkdir -p $work_dir/hist/
+
+# Run CNVnator
+$CNVnatorPrefix/cnvnator -root $rootfile -unique -tree $used_bamfile
+$CNVnatorPrefix/cnvnator -root $rootfile -genome $hg19/human.hg19.genome -his $binsize -d $hg19
+$CNVnatorPrefix/cnvnator -root $rootfile -stat $binsize
+$CNVnatorPrefix/cnvnator -root $rootfile -partition $binsize
+$CNVnatorPrefix/cnvnator -root $rootfile -call $binsize > $SCRATCH/CNVnator_large/${name}.calls.txt
+
+# Genotyping (optional)
+awk '{ print $2 } END { print "exit" }' $SCRATCH/CNVnator_large/${name}.calls.txt | $CNVnatorPrefix/cnvnator -root $rootfile -genotype 500 > $SCRATCH/CNVnator_large/${name}.genotypes.txt
+
+# You may want to delete the root file after the job is done
+rm $rootfile
+
