@@ -7,7 +7,7 @@
 #$ -j y
 #$ -m a
 #$ -l h_data=1G,h_rt=24:00:00
-#$ -t 1-229:1 
+#$ -t 1-454:1 
 
 
 
@@ -17,10 +17,10 @@ module load vcftools
 
 
 # Get one sample one at a time
-used_bamfile=`sed -n "${SGE_TASK_ID}p" /u/home/h/hjzhou/batch2.list`
+used_bamfile=`sed -n "${SGE_TASK_ID}p" /u/home/h/hjzhou/batch_all.list`
 samplename=`echo $used_bamfile | sed -e 's/\/.*\///g' | sed 's/.dedup.realigned.recal.bam//g'`
 
-# use vcftools to extract the sites for this sample.  
+# use vcftools to extract the sites for this sample. It does not include the sites that this sample does not have (--non-ref-ac 1). 
 vcftools --indv $samplename --vcf /u/flashscratch/h/hjzhou/All.dedup.region_merged.realigned.recal.raw_snp.GVCFed.VQSR.vcf --non-ref-ac 1  --recode  --stdout | gzip -c > $SCRATCH/${samplename}_snp.vcf.gz
 
 

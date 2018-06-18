@@ -1,0 +1,29 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N ERDS_
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/ERDS_large_logs/4-19-18ERDS_single.$JOB_ID.$TASK_ID.out
+#$ -j y
+#$ -m a
+#$ -l h_data=20G,h_rt=334:00:00,highp
+#$ -t 1-454:1 
+
+
+used_bamfile=`sed -n "${SGE_TASK_ID}p" /u/home/h/hjzhou/batch_all.list`
+
+ERDSPATH=/u/home/h/hjzhou/erds1.1
+sample_name=`echo $used_bamfile | sed -e 's/\/.*\///g' | sed 's/.dedup.realigned.recal.bam//g'`
+used_vcffile=/u/flashscratch/h/hjzhou/${sample_name}_snp.vcf.gz
+work_dir=$SCRATCH/ERDSresult_4-19
+genome=/u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.fasta
+
+mkdir -p $work_dir
+
+perl $ERDSPATH/erds_pipeline.pl -o ${work_dir}/$sample_name -b ${used_bamfile} -v ${used_vcffile} -r $genome
+
+# You may want to delete the cnv and rd folder, as they occupies a lot of space.
+#rm -r ${work_dir}/$sample_name/cnv
+#rm -r ${work_dir}/$sample_name/rd
+
+/u/project/zarlab/jhsul/bin/bam_to_fastq/bam_to_fastq_3
