@@ -27,7 +27,7 @@ mkdir -p $SCRATCH/CNVnator_large/
 mkdir -p $work_dir
 mkdir -p $work_dir/hist/
 
-# Run CNVnator
+# Run CNVnator. $hg19/human.hg19.genome is the genome size file, which comes with all the chromosome fasta files. 
 $CNVnatorPrefix/cnvnator -root $rootfile -unique -tree $used_bamfile
 $CNVnatorPrefix/cnvnator -root $rootfile -genome $hg19/human.hg19.genome -his $binsize -d $hg19
 $CNVnatorPrefix/cnvnator -root $rootfile -stat $binsize
