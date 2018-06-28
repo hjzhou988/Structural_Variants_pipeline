@@ -25,19 +25,19 @@ class CleanVCF:
                     sv_info = line_split[7].split(';')
                     svtype = sv_info[0].split('=')[1]
                     if svtype != 'BND':
-                        print svtype #for debugging, huajun
-                        print sv_info #for debugging, huajun
+                        #print svtype #for debugging, huajun
+                        #print sv_info #for debugging, huajun
                         out_file.write(line)
-                    else:
-                        if not line_holder:
-                            previous_chrom = line_split[0]
-                            previous_id = line_split[2].split('_')[0]
-                            line_holder = line
-                        else:
-                            if previous_chrom == line_split[0] and previous_id == line_split[2].split('_')[0]:
-                                out_file.write(line_holder)
-                                out_file.write(line)
-                                line_holder = None
+                    #else:
+                        #if not line_holder:
+                        #    previous_chrom = line_split[0]
+                        #    previous_id = line_split[2].split('_')[0]
+                        #    line_holder = line
+                        #else:
+                        #    if previous_chrom == line_split[0] and previous_id == line_split[2].split('_')[0]:
+                       #         out_file.write(line_holder)
+                       #         out_file.write(line)
+                       #         line_holder = None
 
 
 parser = argparse.ArgumentParser(description='Clean Lumpy .vcf to remove excessive BND')

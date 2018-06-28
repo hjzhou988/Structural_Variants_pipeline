@@ -21,7 +21,7 @@ It consumes a lot of memory. The job submission script uses 33G memory for l_mer
 ## Remove BND calls
 LUMPY generates a lot of BND calls. For now, we ignore them and delete them from the multisample VCF. Colin's script of "bnd_remover.py" is used. 
 ```
-python bnd_remover.py -i LUMPY.vcf -o LUMPY.bnd_rm.vcf -d path_to_LUMPYvcf/
+python2 bnd_remover_lumpy.py -i LUMPY.vcf -o LUMPY.bnd_rm.vcf -d path_to_LUMPYvcf/
 ```
 
 ## Genotyping
@@ -31,12 +31,13 @@ python bnd_remover.py -i LUMPY.vcf -o LUMPY.bnd_rm.vcf -d path_to_LUMPYvcf/
 * Merge all single-sample genotype VCF using "vcf_paste.py" (SVTyper_merge.job)
 * Sort the merged VCF using vcf-sort
 ```
-. /u/local/Modules/default/init/modules.sh
 module load vcftools
-vcf-sort svtyper.combined.vcf > svtyper.combined.sorted.vcf
+vcf-sort -c svtyper.combined.vcf > svtyper.combined.sorted.vcf
 ```
 * Remove the sites that are ./. in all samples. "RemoveMissingGTsites.py"
-
+```
+python3 RemoveMissingGTsites.py -i svtyper.combined.sorted.vcf -o svtyper.combined.sorted.MissingGT_rm.vcf
+```
 
 ## Regions to exclude
 * The LUMPY paper has its own regions to exclude, based on certain regions having abnormally high coverage (https://github.com/hall-lab/speedseq/blob/master/annotations/ceph18.b37.lumpy.exclude.2014-01-15.bed). 
@@ -47,7 +48,8 @@ vcf-sort svtyper.combined.vcf > svtyper.combined.sorted.vcf
 ```
 . /u/local/Modules/default/init/modules.sh
 module load bedtools
-bedtools interset -v -a Input.vcf -b ExcludeRegions.bed
+bedtools intersect -header -v -a Input.vcf -b ExcludeRegions.bed > Input.excluded.vcf
+bedtools intersect -header -v -a Input.excluded.vcf -b immunoglobulin.bed > Input.excluded.vdj_removed.vcf
 ```
 
 [1] Layer, Ryan M., et al. "LUMPY: a probabilistic framework for structural variant discovery." Genome biology 15.6 (2014): R84.

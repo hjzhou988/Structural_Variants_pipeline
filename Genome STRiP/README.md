@@ -18,7 +18,7 @@ Bash and job submmision scripts are included in each module's folder.
 Software can be downloaded from Genome STRiP website after registration. Just directly unzip the downloaded file into your preferred location, and it does not need to be compiled. 
 
 ## Reference Genome bundle
-I used the reference genome bundle HG19 in Alden's folder, where there is not only the reference genome, but also the gcmask files (required in SVPreprocess) and svmask files (required in the SVPreprocess, SVDiscovery, and SVGenotyper). 
+I used the reference genome bundle HG19 in Alden's folder, where there is not only the reference genome, but also the gcmask files (required in SVPreprocess) and svmask files (required in the SVPreprocess, SVDiscovery, and SVGenotyper). I explicitely specified these mask files in the scripts. However, they will be used by default if you don't specify them.  The low complexity mask files (lcmask.fasta) is optional, and they are not used if you don't specify them. 
 
 ## SVPreprocess
 * The script was in general based on the script from Dr. Alden Huang and the test script from the software's folder svtoolkit/installtest
@@ -67,9 +67,22 @@ do
 done
 ```
 Basically, "genotypes." in the file names should be deleted.
-* SVGenotyper already included annotation and filters of ALIGNLENGTH, CLUSTERSEP, GTDEPTH, INBREEDINGCOEFF, DUPLICATE, NONVARIANT. No need to do it yourself. You may want to delete the sites with those filter tags using vcftools, just as before. 
+* SVGenotyper already included annotation and filters of ALIGNLENGTH, CLUSTERSEP, GTDEPTH, INBREEDINGCOEFF, DUPLICATE, NONVARIANT. No need to do it yourself. You may want to delete the sites with those filter tags using vcftools:
+```
+vcftools --vcf Genotypes.vcf --remove-filtered-all --recode --recode-INFO-all --stdout > Genotypes.passed.vcf
+```
 
-
+## Concatenate 100k and 10m results
+```
+module load vcftools
+vcf-concat 100k.vcf 10m.vcf > concatenated.vcf
+```
+## Remove the calls that intersect with VDJ regions (where somatic recombinations frequently occurs in B and T cells).
+```
+module load bedtools
+bedtools intersect -header -v -a concatenated.vcf -b immunoglobulin.bed > concatenated.vdj_removed.vcf
+```
+The VDJ regions bed file is also in the reference bundle folder. Note that SVGenotyper already annotated the VDJ intersection score in the vcf file during the run. It just did not filter it. 
 
 
 
