@@ -1,0 +1,63 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N gi_pre
+#$ -cwd
+#$ -o /u/nobackup/eeskin2/jhsul/bipolar/out/str/set.me.missing.$JOB_ID.$TASK_ID.out
+#$ -j y
+#$ -m n
+#$ -l h_data=4G,h_rt=24:00:00,highp
+#$ -t 1-22:1
+
+chr=$SGE_TASK_ID
+
+java=/usr/bin/java
+javacp=/u/project/zarlab/jhsul/bipolar/varcall/java/.
+vcftools=/u/project/zarlab/jhsul/bin/vcftools_0.1.13/bin/vcftools
+pedcheck=/u/project/zarlab/jhsul/bin/pedcheck/pedcheck
+
+origdir=/u/project/zarlab/jhsul/bipolar/genome2/data/orig/
+pedinfo=$origdir/pedinfo.txt
+pedstruct=$origdir/PedStructSeqID.txt
+idmapfile=$origdir/PedStructSeqID.txt
+familyfile=/u/project/zarlab/jhsul/bipolar/varcall/script/gigiimp/family.txt
+
+dir=/u/nobackup/eeskin2/jhsul/bipolar/gvcf_batch_final/str/
+prefix=chr$chr.biallelic.recode
+outdir=$dir/memissing/
+mkdir $outdir
+outdir=$outdir/chr$chr/
+mkdir $outdir
+
+seqfam=/u/nobackup/eeskin2/jhsul/bipolar/gvcf_batch_final/polymutt_indel/chr1/0/plink/bp.churchill.hc.454indiv.vep.qc1.nomono.biallele.gwasqc.polymutt.indel.chr.1.region.0.fam
+
+$java -Xmx1G -cp $javacp ConvertVCFToLinkage $pedinfo F A F T $pedstruct T 7 0:1 $dir/$prefix.vcf.gz $outdir/$prefix
+
+while IFS=' ', read xx yy; do
+    family=$xx
+    pedig=$yy
+
+    $pedcheck -2 -m -p $outdir/$prefix.$pedig.ped -n $outdir/$prefix.marker -b $outdir/$prefix.$pedig.level.1
+    
+    $java -Xmx1G -cp $javacp SetLinkageFileMEMissingPedCheck2 $outdir/$prefix.$pedig.ped $outdir/$prefix.marker $outdir/$prefix.$pedig.level.1.pedcheck.err $outdir/$prefix.$pedig.level.1.memissing.ped $outdir/$prefix.$pedig.level.1.pedcheck.mestat
+
+    $pedcheck -2 -m -p $outdir/$prefix.$pedig.level.1.memissing.ped -n $outdir/$prefix.marker -b $outdir/$prefix.$pedig.level.2
+    
+    $java -Xmx1G -cp $javacp SetLinkageFileMEMissingPedCheck2 $outdir/$prefix.$pedig.level.1.memissing.ped $outdir/$prefix.marker $outdir/$prefix.$pedig.level.2.pedcheck.err $outdir/$prefix.$pedig.level.2.memissing.ped $outdir/$prefix.$pedig.level.2.pedcheck.mestat
+
+    $java -Xmx1G -cp $javacp ConvertPedToGIGILongFormat $pedig $seqfam $outdir/$prefix.$pedig.level.2.memissing.ped $outdir/$prefix.marker $outdir/GIGI.genotype.chr.$chr.$pedig
+
+    gzip $outdir/$prefix.$pedig.ped
+    gzip $outdir/$prefix.$pedig.level.1.pedcheck.err
+    gzip $outdir/$prefix.$pedig.level.1.memissing.ped
+    gzip $outdir/$prefix.$pedig.level.2.pedcheck.err
+    gzip $outdir/$prefix.$pedig.level.2.memissing.ped
+
+done < $familyfile
+
+# Merge all family output files into one file and add position info if not already there?
+$java -Xmx1G -cp $javacp MergeGIGIFile $familyfile $outdir/GIGI.genotype.chr.$chr
+
+$java -Xmx1G -cp $javacp MergePedCheckMEStatFile $familyfile $outdir/$prefix $outdir/GIGI.genotype.ME.stat.chr.$chr.txt
+
+/u/project/zarlab/jhsul/bin/bam_to_fastq/bam_to_fastq_3

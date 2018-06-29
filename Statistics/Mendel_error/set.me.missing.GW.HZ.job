@@ -1,0 +1,74 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N Mend_Er
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/6-26-18set.me.missing.$JOB_ID.out
+#$ -j y
+#$ -m ae
+#$ -l h_data=4G,h_rt=24:00:00,highp
+
+# Make sure that the input vcf.gz file is already sorted. 
+
+#java path
+java=/usr/bin/java
+
+#java classes path
+javacp=/u/home/h/hjzhou/forHuajun/.
+
+#vcftools and pedcheck path
+vcftools=/u/project/zarlab/jhsul/bin/vcftools_0.1.13/bin/vcftools
+pedcheck=/u/home/h/hjzhou/forHuajun/pedcheck
+
+# Need "pedinfo", "pedstruct","IDmapfile", and "familyfile"
+origdir=/u/home/h/hjzhou/forHuajun
+pedinfo=$origdir/pedinfo.txt
+pedstruct=$origdir/PedStructSeqID.txt
+idmapfile=$origdir/PedStructSeqID.txt
+familyfile=$origdir/family.txt
+
+# Specify input vcf.gz file path, prefix (name part of name.vcf.gz), and output path. 
+dir=$SCRATCH/pedcheck
+prefix=svtyper.combined.removeMissingGT.SVmasked.vdj_removed.sorted.annotated.filtered.passed.DEL
+outdir=$dir/memissingHZ_lumpySVAnnotDEL/
+mkdir -p $outdir
+
+# Not sure about seqfam file. It is used in ConvertPedToGIGILongFormat. It appears that ConvertPedToGIGILongFormat only reads the first two columns, family ID and individual ID, of the seqfam file. 
+seqfam=/u/nobackup/eeskin2/jhsul/bipolar/gvcf_batch_final/polymutt_indel/chr1/0/plink/bp.churchill.hc.454indiv.vep.qc1.nomono.biallele.gwasqc.polymutt.indel.chr.1.region.0.fam
+
+# This step generates ped file for all families and one marker file which ends with ".marker"
+$java -Xmx1G -cp $javacp ConvertVCFToLinkage $pedinfo F A F T $pedstruct T 7 0:1 $dir/$prefix.vcf.gz $outdir/$prefix
+
+# This script checks whether there are duplicated markers. It generates a new marker file that ends with .marker-1. If there is duplicated markers, it will print to stdout, and in .marker-1 file the duplicated ones will be labeled as -1, -2, ...
+. /u/local/Modules/default/init/modules.sh
+module load python/3.6.1
+python3 $javacp/NonDuplicateMarker.py $outdir/$prefix.marker
+
+# Running the pedcheck program
+while IFS=' ', read xx yy; do
+    family=$xx
+    pedig=$yy
+
+    $pedcheck -2 -m -p $outdir/$prefix.$pedig.ped -n $outdir/$prefix.marker-1 -b $outdir/$prefix.$pedig.level.1
+    
+    $java -Xmx1G -cp $javacp SetLinkageFileMEMissingPedCheck2 $outdir/$prefix.$pedig.ped $outdir/$prefix.marker-1 $outdir/$prefix.$pedig.level.1.pedcheck.err $outdir/$prefix.$pedig.level.1.memissing.ped $outdir/$prefix.$pedig.level.1.pedcheck.mestat
+
+    $pedcheck -2 -m -p $outdir/$prefix.$pedig.level.1.memissing.ped -n $outdir/$prefix.marker-1 -b $outdir/$prefix.$pedig.level.2
+    
+    $java -Xmx1G -cp $javacp SetLinkageFileMEMissingPedCheck2 $outdir/$prefix.$pedig.level.1.memissing.ped $outdir/$prefix.marker-1 $outdir/$prefix.$pedig.level.2.pedcheck.err $outdir/$prefix.$pedig.level.2.memissing.ped $outdir/$prefix.$pedig.level.2.pedcheck.mestat
+
+    $java -Xmx1G -cp $javacp ConvertPedToGIGILongFormat $pedig $seqfam $outdir/$prefix.$pedig.level.2.memissing.ped $outdir/$prefix.marker-1 $outdir/GIGI.genotype.chr.$chr.$pedig
+
+    gzip $outdir/$prefix.$pedig.ped
+    gzip $outdir/$prefix.$pedig.level.1.pedcheck.err
+    gzip $outdir/$prefix.$pedig.level.1.memissing.ped
+    gzip $outdir/$prefix.$pedig.level.2.pedcheck.err
+    gzip $outdir/$prefix.$pedig.level.2.memissing.ped
+
+done < $familyfile
+
+# Merge all family output files into one file and add position info if not already there?
+java -Xmx1G -cp $javacp MergeGIGIFile $familyfile $outdir/GIGI.genotype.chr.$chr
+
+java -Xmx1G -cp $javacp MergePedCheckMEStatFile $familyfile $outdir/$prefix $outdir/GIGI.genotype.ME.stat.chr.$chr.txt
+
