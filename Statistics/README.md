@@ -22,7 +22,7 @@ Then use the Statistic.ipynb to do the following statistics:
 * Distribution of alternative allele frequency
 * Distribtuion of missing rate
 
-For determining the missing rate, use vcftools:
+For determining the missing rate, use vcftools: (It does not work with Genome STRiP vcf)
 ```
 vcftools --vcf Name.vcf --missing-indv --out outputfileName  # generates ".imiss" file that contains the missing rate for each individual
 vcftools --vcf Name.vcf --missing-site --out outputfileName  # generates ".lmiss" file that contains the missing rate for each SV locus
