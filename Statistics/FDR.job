@@ -1,0 +1,39 @@
+#!/bin/bash
+#$ -V
+#$ -S /bin/bash
+#$ -N Anno
+#$ -cwd
+#$ -o /u/flashscratch/h/hjzhou/7-12-18Anno_IntensityRankSum.$JOB_ID.out 
+#$ -j y 
+#$ -m bea 
+#$ -l h_data=20G,h_rt=24:00:00
+
+# Specify the INPUT vcf file name, OUTPUT report data name, and OUTPUTvcf vcf file name. Also provide reference genome and array intensity data in the java command line.
+
+INPUT=$SCRATCH/bipolar_lumpy/svtyper.combined.removeMissingGT.SVmasked.vdj_removed.DEL.sorted.vcf
+OUTPUT=$SCRATCH/bipolar_lumpy/svtyper.combined.removeMissingGT.SVmasked.vdj_removed.DEL.sorted.IRSreport.dat
+OUTPUTvcf=$SCRATCH/bipolar_lumpy/svtyper.combined.removeMissingGT.SVmasked.vdj_removed.DEL.sorted.IRS.vcf
+
+# load needed hoffman2 modules
+. /u/local/Modules/default/init/modules.sh
+module load java
+module load R
+module load samtools
+
+
+export SV_DIR="/u/home/h/hjzhou/dd/svtoolkit"
+
+
+classpath="${SV_DIR}/lib/SVToolkit.jar:${SV_DIR}/lib/gatk/GenomeAnalysisTK.jar"
+
+java -Xmx4g -cp ${classpath} \
+     org.broadinstitute.sv.main.SVAnnotator \
+     -A IntensityRankSum \
+     -R /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/reference/Homo_sapiens_assembly19.fasta \
+     -writeReport true \
+     -writeSummary true \
+     -vcf $INPUT \
+     -arrayIntensityFile /u/home/a/alden/eeskin2/bipolar_sv/svtoolkit/cleaned_scripts/bp.fdr2.dat \
+     -irsUseGenotypes true \
+     -reportFile $OUTPUT \
+     -O $OUTPUTvcf

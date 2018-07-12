@@ -29,6 +29,11 @@ vcftools --vcf Name.vcf --missing-site --out outputfileName  # generates ".lmiss
 
 ```
 
+## False Discovery Rate
+
+Use SNP microarray intensity data to infer the false discovery rate of the SV calling result. We use SVAnnotator module from Genome STRiP to do that. 
+Run `FDR.job` to submit the SVAnnotator job. The job usually lasts about 30 minutes. 
+Then use `FDR.py` to parse the annotated vcf file. It prints the FDR, number of records having p value greater than 0.5, total number of records, and number of records with NA. 
 
 ## Mendel errors
 For Mendel error, use pedcheck, and PLINK:
