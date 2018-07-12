@@ -72,15 +72,16 @@ Basically, "genotypes." in the file names should be deleted.
 vcftools --vcf Genotypes.vcf --remove-filtered-all --recode --recode-INFO-all --stdout > Genotypes.passed.vcf
 ```
 
-## Concatenate 100k and 10m results
+## Concatenate and sort 100k and 10m results
 ```
 module load vcftools
 vcf-concat 100k.vcf 10m.vcf > concatenated.vcf
+vcf-sort -c concatenated.vcf > concatenated.sorted.vcf
 ```
 ## Remove the calls that intersect with VDJ regions (where somatic recombinations frequently occurs in B and T cells).
 ```
 module load bedtools
-bedtools intersect -header -v -a concatenated.vcf -b immunoglobulin.bed > concatenated.vdj_removed.vcf
+bedtools intersect -header -v -a concatenated.sorted.vcf -b immunoglobulin.bed > concatenated.sorted.vdj_removed.vcf
 ```
 The VDJ regions bed file is also in the reference bundle folder. Note that SVGenotyper already annotated the VDJ intersection score in the vcf file during the run. It just did not filter it. 
 
