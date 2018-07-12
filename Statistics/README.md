@@ -54,7 +54,7 @@ In addition to Mendel error number per SV, [PLINK](http://zzz.bwh.harvard.edu/pl
 
 Download the Linux (x86_64) binary from the PLINK download page (http://zzz.bwh.harvard.edu/plink/download.shtml#download). PLINK needs PED file and MAP file as inputs. 
 
-* Use vcftools to generate ped file and map file.
+Use vcftools to generate ped file and map file:
 ```
 vcftools --vcf Name.vcf --plink
 ```
