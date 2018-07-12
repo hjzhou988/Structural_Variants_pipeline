@@ -30,8 +30,8 @@ vcftools --vcf Name.vcf --missing-site --out outputfileName  # generates ".lmiss
 ```
 
 ## False Discovery Rate
-
 Use SNP microarray intensity data to infer the false discovery rate of the SV calling result. We use SVAnnotator module from Genome STRiP to do that. 
+Importantly, the vcf to be annotated needs to be sorted first (use vcf-sort -c ). 
 Run `FDR.job` to submit the SVAnnotator job. The job usually lasts about 30 minutes. 
 Then use `FDR.py` to parse the annotated vcf file. It prints the FDR, number of records having p value greater than 0.5, total number of records, and number of records with NA. 
 
@@ -54,7 +54,6 @@ JaeHoon's script calls "level 1" and "level 2" Mendel errors by Pedcheck. In my 
 The final Mendel error statitistics is in the output "GIGI.genotype.ME.stat.chr..txt". It gives the Mendel error number per SV. 
 
 ### PLINK
-
 In addition to Mendel error number per SV, [PLINK](http://zzz.bwh.harvard.edu/plink/) can give Mendel error number per individual and per family. 
 
 Download the Linux (x86_64) binary from the PLINK download page (http://zzz.bwh.harvard.edu/plink/download.shtml#download). PLINK needs PED file and MAP file as inputs. 
