@@ -66,7 +66,7 @@ At this time point your can use hoffman2 python 2.7.2 to resume the job.
 
 ## Large Sample Size
 
-From the communication with the author, it seems that the reason why it consumes a large memory is that FusorSV is either training my own data or using the break-point smoothing functionality. We don't have truth set, so we are not training our own data. For now, we also don't use break-point smoothinkg functionality. The newer version (0.1.2) integrates a "--merge" and "--no_merge" flags. This allows us to run samples in batches with low memory request and finally merges the single vcfs. 
+From the communication with the author, it seems that the reason why it consumes a large memory is that FusorSV is either training my own data or using the break-point smoothing functionality. We don't have truth set, so we are not training our own data. For now, we also don't use break-point smoothing functionality. The newer version (0.1.2) integrates "--merge" and "--no_merge" flags. This allows us to run samples in batches with low memory request and finally merge the single vcfs into a multi-sample vcf. 
 
 FusorSV is not fully compatible with HG19 reference yet. We have to manually change the chromosome notation in the VCF files and reference files (chr1 changing to 1, chrX changing to X, chrM changing to MT). Here is the bash script I used that makes this step a little bit easier:
 ```
