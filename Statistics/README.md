@@ -20,7 +20,7 @@ Then use the Statistic.ipynb to do the following statistics:
 * Number of SVs per chromosome
 * Number of SVs per chromosome per person
 * Distribution of alternative allele frequency
-* Distribtuion of missing rate
+* Distribtuion of missing rate (Does not work with Genome STRiP result.)
 
 For determining the missing rate, use vcftools: (It does not work with Genome STRiP vcf)
 ```
