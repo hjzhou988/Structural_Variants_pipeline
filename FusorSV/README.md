@@ -7,11 +7,17 @@ I was testing FusorSV using the author's own git hub page https://github.com/tim
 
 ## Install
 * Go to https://github.com/timothyjamesbecker/FusorSV and install according to the "pip" install instructions. 
-Follow their "pip" install instructions. Use "--user" option for each install so that it's installed in your local directory. The FusorSV.py file will be in the ~/.local/bin/ directory. bx-python was hard to install. Since it was only used for "liftover", it's optional, and the 0.7.3  (even though it's not the required <0.7.3) version was already installed in python 2.7.2 (hoffman2).
+The easiest way is to load Hoffman2's python/2.7 (2.7.2) and install pysam:
+```
+module load python/2.7
+pip install -Iv 'pysam>=0.9.0,<0.9.2' --user  # "--user" means it will be installed in your local home directory
+```
+Because hoffman2's python 2.7.2 already installed most of the required packages.
 
-* I also installed python 2.7.10 in my home directory, as the required version of python (2.7.6 < python < 2.7.12) is not available on hoffman2, but 2.7.2 from hoffman2 is fine. 
+Follow their "pip" install instruction for installing FusorSV. And add "--user" option so that it's installed in your local directory. The FusorSV.py file will be in the ~/.local/bin/ directory. bx-python was hard to install, but it already installed on the hoffman2 python/2.7 (but not on the other python versions, so that's why we use hoffman2's python/2.7). Since bx-python was only used for "liftover", and the 0.7.3  version is fine (even though it's not the required <0.7.3). 
 
-* FusorSV requires the HG37 version of reference genome (not HG19), as using HG19 will cause this error:
+* I also installed python 2.7.10 in my home directory, as the required version of python (2.7.6 < python < 2.7.12) is not available on hoffman2, but 2.7.2 from hoffman2 seem's fine. 
+* FusorSV requires the HG37 decoy version of reference genome for their provided samples (not HG19), as using HG19 will cause this error:
 ```
 Traceback (most recent call last):
   File "/u/home/h/hjzhou/.local/bin/FusorSV.py", line 529, in <module>
@@ -20,7 +26,7 @@ Traceback (most recent call last):
        with open(vcfs[0],'r') as f:
   IndexError: list index out of range
 ```
-You also need to copy the HG37 genome into your own folder, as FusorSV will index it, if it was not indexed yet. 
+You also need to copy the HG37 decoy genome into your own folder, as FusorSV will index it, if it was not indexed yet. 
 
 
 ## Prepare inputs from different algorithms
@@ -57,6 +63,20 @@ ImportError: No module named bx.bbi.bigwig_file
 
 ```
 At this time point your can use hoffman2 python 2.7.2 to resume the job. 
+
+## Large Sample Size
+
+From the communication with the author, it seems that the reason why it consumes a large memory is that FusorSV is either training my own data or using the break-point smoothing functionality. We don't have truth set, so we are not training our own data. For now, we also don't use break-point smoothinkg functionality. The newer version (0.1.2) integrates a "--merge" and "--no_merge" flags. This allows us to run samples in batches with low memory request and finally merges the single vcfs. 
+
+FusorSV is not fully compatible with HG19 reference yet. We have to manually change the chromosome notation in the VCF files and reference files (chr1 changing to 1, chrX changing to X, chrM changing to MT). Here is the bash script I used that makes this step a little bit easier:
+```
+for file in `ls`
+do
+ sed -i 's/chr\([0-9]\{1,2\}\)/\1/g; s/chr\([X-Y]\)/\1/g; s/chrM/MT/g' $file &
+done
+```
+Basically "sed" editor finds and replaces autosomes, sex chromosomes, and mitochondrial chromosome notation sequentially. "&" parallelizes the "for loop" jobs.
+
 
 
 [1] Becker, Timothy, et al. "FusorSV: an algorithm for optimally combining data from multiple structural variation detection methods." Genome biology 19.1 (2018): 38.
