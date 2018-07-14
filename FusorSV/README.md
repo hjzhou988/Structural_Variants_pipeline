@@ -14,7 +14,7 @@ pip install -Iv 'pysam>=0.9.0,<0.9.2' --user  # "--user" means it will be instal
 ```
 That's because hoffman2's python 2.7.2 already installed most of the required packages.
 
-Follow their "pip" install instruction for installing FusorSV. Add "--user" option so that it's installed in your local directory. The FusorSV.py file will be in the ~/.local/bin/ directory. bx-python was hard to install, but it was already installed on the hoffman2 python/2.7 (but not on the other python versions). Since bx-python 0.7.3  version is fine (even though it's not the required <0.7.3). 
+Follow their "pip" install instruction for installing FusorSV. Add "--user" option so that it's installed in your local directory. The FusorSV.py file will be in the ~/.local/bin/ directory. bx-python was hard to install, but it was already installed on the hoffman2 python/2.7 (but not on the other python versions). bx-python 0.7.3  version is fine (even though it's not the required <0.7.3). 
 
 * I also installed python 2.7.10 in my home directory, as the required version of python (2.7.6 < python < 2.7.12) is not available on hoffman2, but 2.7.2 from hoffman2 seem's fine. 
 * FusorSV requires the HG37 decoy version of reference genome for their provided samples (not HG19), as using HG19 will cause this error:
