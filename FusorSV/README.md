@@ -17,17 +17,7 @@ That's because hoffman2's python 2.7.2 already installed most of the required pa
 Follow their "pip" install instruction for installing FusorSV. Add "--user" option so that it's installed in your local directory. The FusorSV.py file will be in the ~/.local/bin/ directory. bx-python was hard to install, but it was already installed on the hoffman2 python/2.7 (but not on the other python versions). bx-python 0.7.3  version is fine (even though it's not the required <0.7.3). 
 
 * I also installed python 2.7.10 in my home directory, as the required version of python (2.7.6 < python < 2.7.12) is not available on hoffman2, but 2.7.2 from hoffman2 seem's fine. 
-* FusorSV requires the HG37 decoy version of reference genome for their provided samples (not HG19), as using HG19 will cause this error:
-```
-Traceback (most recent call last):
-  File "/u/home/h/hjzhou/.local/bin/FusorSV.py", line 529, in <module>
-      overlap=cluster_overlap))
-  File "/u/home/h/hjzhou/.local/lib/python2.7/site-packages/fusorsv/svu_utils.py", line 475, in fusorSV_vcf_multi_sample_merge
-       with open(vcfs[0],'r') as f:
-  IndexError: list index out of range
-```
-You also need to copy the HG37 decoy genome into your own folder, as FusorSV will index it, if it was not indexed yet. 
-
+* FusorSV requires you to provide the same reference genome as you used for alignment and the algorithms. For their provided samples, HG37 decoy version of reference genome should be used. 
 
 ## Prepare inputs from different algorithms
 Currently, we have the outputs from CNVnator, Genome STRiP, and LUMPY. The author provided script for converting multi-sample vcf from Genome STRiP to single-sample vcf with the VCFs from both SVGenotyper and CNVDiscovery. I tweaked the script to accept the VCF from SVGenotyper only. 
@@ -46,7 +36,7 @@ done
 Both scripts are included in the scripts folder
 
 ## Run FusorSV
-* For the samples that was installed with the software, the peak memory is 46G (whether or not whole genome or just chromosome 22). 
+* For the samples that was installed with the software (without --merge or --no_merge), the peak memory is 46G (whether or not whole genome or just chromosome 22). 
 * FusorSV appears to be able to resume failed job. Because if I specify the same output folder, the job uses less time and peak memory for finishing the job. 
 * If bx-python was not installed, it will have this error:
 ```
@@ -62,7 +52,6 @@ Traceback (most recent call last):
 ImportError: No module named bx.bbi.bigwig_file
 
 ```
-At this time point your can use hoffman2 python 2.7.2 to resume the job. 
 
 ## Large Sample Size
 
