@@ -66,6 +66,12 @@ done
 ```
 Basically "sed" editor finds and replaces autosomes, sex chromosomes, and mitochondrial chromosome notation sequentially. "&" parallelizes the "for loop" jobs.
 
-
-
+Then you make a bunch of folders and put a certain number of samples inside each. You can submit it as a job array when dealing with many batches (Sample script also included)
+```
+FusorSV.py -r ref -i batch1 -o final_out_dir -f DEFAULT -P 1 --no_merge
+```
+The finished VCF files are inside final_out_dir/vcf/. Then you merge them with:
+```
+FusorSV.py -r ref -o final_out_dir --merge -M 0.5 -L DEFAULT
+```
 [1] Becker, Timothy, et al. "FusorSV: an algorithm for optimally combining data from multiple structural variation detection methods." Genome biology 19.1 (2018): 38.

@@ -3,25 +3,25 @@
 #$ -S /bin/bash
 #$ -N FusorSV
 #$ -cwd
-#$ -o /u/flashscratch/h/hjzhou/6-5-18FusorSV449.$JOB_ID.out
+#$ -o /u/flashscratch/h/hjzhou/7-6-18FusorSV.mysamples.$JOB_ID.$TASK_ID.out
 #$ -j y
 #$ -m bea
-#$ -l h_data=64G,h_rt=24:00:00
+#$ -l h_data=10G,h_rt=24:00:00
+#$ -t 1-2:1
 
-# load python/2.7.2 from hoffman2, which have installed all the necessary modules.
+
 . /u/local/Modules/default/init/modules.sh
 module load python/2.7 
 
-# HG19 seems not very compatible. Use HG37 instead. 
-
 python ~/.local/bin/FusorSV.py \
--r $SCRATCH/reference/human_g1k_v37.fasta \
--i $SCRATCH/mysamples/ \
+-r $SCRATCH/Homo_sapiens_assembly19.chr_rm.fasta \
+-m $SCRATCH/Homo_sapiens_assembly19.mask.101.fasta.chr_rm.bed \
+-i $SCRATCH/mysamples/batch$SGE_TASK_ID/ \
 -f DEFAULT \
--o $SCRATCH/mysamples_64G_WG/ \
+-o $SCRATCH/mysamples_result_masked/ \
 -M 0.5 \
 -p 1 \
--L DEFAULT
+--no_merge
 
 
-
+#/u/project/zarlab/jhsul/bin/bam_to_fastq/bam_to_fastq_3
