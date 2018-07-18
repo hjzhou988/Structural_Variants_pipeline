@@ -52,5 +52,8 @@ bedtools intersect -header -v -a Input.vcf -b ExcludeRegions.bed > Input.exclude
 bedtools intersect -header -v -a Input.excluded.vcf -b immunoglobulin.bed > Input.excluded.vdj_removed.vcf
 ```
 
+## Keep DEL or DEL/INV
+I also provided the codes to keep only the DEL records or DEL and INV records (`KeepDEL.py`,`KeepDELINV.py`, with VCF file as input). 
+
 [1] Layer, Ryan M., et al. "LUMPY: a probabilistic framework for structural variant discovery." Genome biology 15.6 (2014): R84.
 
