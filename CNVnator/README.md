@@ -2,7 +2,7 @@
 
 CNVnator is an algorithm based on read depth (RD), and utilizes mean-shift technique to do partitioning [1].
 
-The script is simple, all in CNVnator_large.job (CNVnator does not determine sex, and assumes a male sample). 
+The script is simple, all in `CNVnator_large.job` (CNVnator does not determine sex, and assumes a male sample). 
 
 CNVnator generates `calls.txt` files. They provided `cnvnator2VCF.pl` script to convert those kind of files to vcf files. The vcf files contain "genotype" and "copy number", which are infered from "natorRD" value. 
 
